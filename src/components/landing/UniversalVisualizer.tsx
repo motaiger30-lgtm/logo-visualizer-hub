@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Upload, Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2 } from "lucide-react";
+import { Upload, Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
 import { CATEGORIES, CategorySlug, getCategory, productImageUrl } from "@/lib/catalog";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
+import urgentLogo1 from "@/assets/urgent-logo-1.png";
+import urgentLogo2 from "@/assets/urgent-logo-2.png";
+import urgentLogo3 from "@/assets/urgent-logo-3.png";
+
+const URGENT_PRESETS = [
+  { name: "Wordmark", src: urgentLogo1 },
+  { name: "Badge", src: urgentLogo2 },
+  { name: "Monogram", src: urgentLogo3 },
+];
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductImage } from "./ProductImage";
@@ -229,22 +238,40 @@ export function UniversalVisualizer() {
                     onChange={(e) => setLogoScale(Number(e.target.value))}
                     className="w-full accent-[color:var(--primary)]"
                   />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => originalSrc && setLogoSrc(originalSrc)}
-                      className="flex-1 rounded-full glass px-3 py-1.5 text-[11px] font-semibold hover:bg-white/10 transition"
-                    >
-                      Keep original
-                    </button>
-                    <button
-                      onClick={retry}
-                      className="flex items-center justify-center gap-1 rounded-full glass px-3 py-1.5 text-[11px] font-semibold hover:bg-white/10 transition"
-                    >
-                      <RotateCcw className="h-3 w-3" /> Retry
-                    </button>
-                  </div>
+                  <button
+                    onClick={retry}
+                    className="w-full flex items-center justify-center gap-1 rounded-full glass px-3 py-1.5 text-[11px] font-semibold hover:bg-white/10 transition"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Re-extract background
+                  </button>
                 </div>
               )}
+
+              {/* Try with Urgent logo */}
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-3.5 w-3.5 text-accent" />
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                    No logo? Try with Urgent
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {URGENT_PRESETS.map((p) => (
+                    <button
+                      key={p.name}
+                      onClick={() => {
+                        setOriginalSrc(p.src);
+                        setLogoSrc(p.src);
+                        setLogoX(0); setLogoY(0); setLogoScale(1);
+                      }}
+                      className="group rounded-xl bg-white/90 hover:bg-white p-2 aspect-square flex items-center justify-center transition shadow-sm hover:shadow-glow-soft"
+                      title={p.name}
+                    >
+                      <img src={p.src} alt={`Urgent ${p.name}`} className="max-h-full max-w-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </Step>
 
             {/* Price + CTA */}
