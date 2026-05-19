@@ -8,9 +8,9 @@ import urgentLogo2 from "@/assets/urgent-logo-2.png";
 import urgentLogo3 from "@/assets/urgent-logo-3.png";
 
 const URGENT_PRESETS = [
-  { name: "Wordmark", src: urgentLogo1 },
-  { name: "Badge", src: urgentLogo2 },
-  { name: "Monogram", src: urgentLogo3 },
+  { name: "Heritage", src: urgentLogo1, bg: "bg-white" },
+  { name: "Navy", src: urgentLogo2, bg: "bg-white" },
+  { name: "White", src: urgentLogo3, bg: "bg-[#0D1146]" },
 ];
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { supabase } from "@/integrations/supabase/client";
@@ -264,8 +264,11 @@ export function UniversalVisualizer() {
                         setLogoSrc(p.src);
                         setLogoX(0); setLogoY(0); setLogoScale(1);
                       }}
-                      className="group rounded-xl bg-white/90 hover:bg-white p-2 aspect-square flex items-center justify-center transition shadow-sm hover:shadow-glow-soft"
-                      title={p.name}
+                      className={cn(
+                        "group rounded-xl p-2 aspect-square flex items-center justify-center transition shadow-sm hover:shadow-glow-soft",
+                        p.bg,
+                      )}
+                      title={`Urgent ${p.name}`}
                     >
                       <img src={p.src} alt={`Urgent ${p.name}`} className="max-h-full max-w-full object-contain" />
                     </button>
