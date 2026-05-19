@@ -25,7 +25,7 @@ export function FinalCTA() {
             Get Quote on WhatsApp
           </a>
           <a
-            href="#visualizer"
+            href="#designer"
             className="inline-flex items-center gap-2 rounded-full glass-strong px-8 py-4 text-base font-semibold text-foreground hover:bg-white/10 transition"
           >
             Design first
