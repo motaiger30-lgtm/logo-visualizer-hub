@@ -40,7 +40,7 @@ export function UniversalVisualizer() {
   const [productSlug, setProductSlug] = useState(category.products[0].slug);
   const product = category.products.find((p) => p.slug === productSlug) ?? category.products[0];
   const [color, setColor] = useState(COLORS[1]);
-  const [qty, setQty] = useState(Math.max(100, product.moq));
+  const [qty, setQty] = useState(100);
 
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const [originalSrc, setOriginalSrc] = useState<string | null>(null);
