@@ -1,8 +1,28 @@
-import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring, MotionValue } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ProductImage } from "./ProductImage";
-import { PENS, productImageUrl } from "@/lib/catalog";
+import { PENS, productImageUrl, Pen } from "@/lib/catalog";
+
+type Float = { pen: Pen; x: string; y: string; depth: number; rot: number; size: number };
+
+function FloatingPen({ f, sx, sy }: { f: Float; sx: MotionValue<number>; sy: MotionValue<number> }) {
+  const tx = useTransform(sx, (v) => v * f.depth);
+  const ty = useTransform(sy, (v) => v * f.depth);
+  return (
+    <motion.div
+      style={{ left: f.x, top: f.y, width: f.size, x: tx, y: ty, rotate: f.rot }}
+      className="absolute animate-float opacity-80"
+    >
+      <ProductImage
+        src={productImageUrl("pens", f.pen.slug)}
+        label={f.pen.name}
+        ratio="tall"
+        className="shadow-glow"
+      />
+    </motion.div>
+  );
+}
 
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
