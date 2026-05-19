@@ -53,7 +53,7 @@ export function UniversalVisualizer() {
   // Reset product when category changes & listen for external category events
   useEffect(() => {
     setProductSlug(category.products[0].slug);
-    setQty((q) => Math.max(q, category.products[0].moq));
+    setQty((q) => Math.min(10000, Math.max(100, q)));
   }, [categorySlug]);
 
   useEffect(() => {
