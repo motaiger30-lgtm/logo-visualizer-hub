@@ -61,27 +61,9 @@ export function Hero() {
 
       {/* floating products */}
       <div className="pointer-events-none absolute inset-0 hidden lg:block">
-        {floats.map((f, i) => {
-          const tx = useTransform(sx, (v) => v * f.depth);
-          const ty = useTransform(sy, (v) => v * f.depth);
-          return (
-            <motion.div
-              key={i}
-              style={{
-                left: f.x, top: f.y, width: f.size, x: tx, y: ty,
-                rotate: f.rot,
-              }}
-              className="absolute animate-float opacity-80"
-            >
-              <ProductImage
-                src={productImageUrl("pens", f.pen.slug)}
-                label={f.pen.name}
-                ratio="tall"
-                className="shadow-glow"
-              />
-            </motion.div>
-          );
-        })}
+        {floats.map((f, i) => (
+          <FloatingPen key={i} f={f} sx={sx} sy={sy} />
+        ))}
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 text-center">
