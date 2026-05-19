@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Urgent Advertising — See Your Brand Printed Before You Order" },
-      { name: "description", content: "Premium promotional products in Egypt. Upload your logo and instantly preview pens, mugs, USBs, notebooks and t-shirts before printing. Live pricing in EGP." },
+      { name: "description", content: "Premium promotional products in Egypt. Upload your logo and instantly preview pens, mugs, USBs, notebooks and banners before printing. Live pricing in EGP." },
       { property: "og:title", content: "Urgent Advertising — Preview Before You Print" },
       { property: "og:description", content: "Upload your logo and instantly preview promotional products before printing. Custom pens, mugs, USBs and more." },
       { property: "og:type", content: "website" },
