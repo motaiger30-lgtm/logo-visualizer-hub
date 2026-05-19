@@ -1,8 +1,12 @@
-import { CATEGORIES, productImageUrl } from "@/lib/catalog";
+import { CATEGORIES, CategorySlug, productImageUrl } from "@/lib/catalog";
 import { ProductImage } from "./ProductImage";
 import { ArrowUpRight } from "lucide-react";
 
 export function Categories() {
+  const pick = (slug: CategorySlug) => {
+    window.dispatchEvent(new CustomEvent("urgent:set-category", { detail: { category: slug } }));
+  };
+
   return (
     <section id="products" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -14,17 +18,16 @@ export function Categories() {
             </h2>
           </div>
           <p className="max-w-md text-muted-foreground">
-            Choose a category and customize with your logo, colors and quantity. Live pricing in EGP.
+            Tap a category to load it into the designer below. Live pricing in EGP.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {CATEGORIES.map((c, i) => (
-            <a
+          {CATEGORIES.map((c) => (
+            <button
               key={c.slug}
-              href={`#${c.slug}`}
-              className="group relative overflow-hidden rounded-3xl glass p-6 hover:shadow-glow transition-all duration-500"
-              style={{ animationDelay: `${i * 80}ms` }}
+              onClick={() => pick(c.slug)}
+              className="group relative text-left overflow-hidden rounded-3xl glass p-6 hover:shadow-glow transition-all duration-500"
             >
               <div className="absolute inset-0 bg-gradient-glow opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
               <div className="relative">
@@ -44,7 +47,7 @@ export function Categories() {
                   </span>
                 </div>
               </div>
-            </a>
+            </button>
           ))}
         </div>
       </div>

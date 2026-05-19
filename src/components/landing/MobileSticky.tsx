@@ -5,11 +5,11 @@ export function MobileSticky() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden p-3">
       <div className="glass-strong rounded-full flex items-center justify-between gap-2 px-2 py-2">
-        <a href="#visualizer" className="flex-1 text-center text-xs font-semibold text-foreground py-2">
+        <a href="#designer" className="flex-1 text-center text-xs font-semibold text-foreground py-2">
           Design
         </a>
-        <a href="#pricing" className="flex-1 text-center text-xs font-semibold text-foreground py-2">
-          Price
+        <a href="#products" className="flex-1 text-center text-xs font-semibold text-foreground py-2">
+          Products
         </a>
         <a
           href={buildWhatsAppUrl({})}

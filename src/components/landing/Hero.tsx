@@ -83,7 +83,7 @@ export function Hero() {
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <a
-            href="#visualizer"
+            href="#designer"
             className="group inline-flex items-center gap-2 rounded-full bg-gradient-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-glow hover:brightness-110 transition-all"
           >
             Start Designing
