@@ -40,7 +40,7 @@ export function UniversalVisualizer() {
   const [productSlug, setProductSlug] = useState(category.products[0].slug);
   const product = category.products.find((p) => p.slug === productSlug) ?? category.products[0];
   const [color, setColor] = useState(COLORS[1]);
-  const [qty, setQty] = useState(Math.max(100, product.moq));
+  const [qty, setQty] = useState(100);
 
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const [originalSrc, setOriginalSrc] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export function UniversalVisualizer() {
   // Reset product when category changes & listen for external category events
   useEffect(() => {
     setProductSlug(category.products[0].slug);
-    setQty((q) => Math.max(q, category.products[0].moq));
+    setQty((q) => Math.min(10000, Math.max(100, q)));
   }, [categorySlug]);
 
   useEffect(() => {
@@ -185,10 +185,10 @@ export function UniversalVisualizer() {
               </div>
             </Step>
 
-            <Step n={4} label={`Quantity (MOQ ${product.moq})`}>
+            <Step n={4} label={`Quantity (min 100)`}>
               <div className="flex items-center gap-3">
                 <input
-                  type="range" min={product.moq} max={2000} step={10}
+                  type="range" min={100} max={10000} step={50}
                   value={qty}
                   onChange={(e) => setQty(Number(e.target.value))}
                   className="flex-1 accent-[color:var(--primary)]"
@@ -196,8 +196,9 @@ export function UniversalVisualizer() {
                 <input
                   type="number"
                   value={qty}
-                  min={product.moq}
-                  onChange={(e) => setQty(Math.max(product.moq, Number(e.target.value)))}
+                  min={100}
+                  max={10000}
+                  onChange={(e) => setQty(Math.min(10000, Math.max(100, Number(e.target.value))))}
                   className="w-20 rounded-lg glass px-2.5 py-2 text-sm text-foreground"
                 />
               </div>
