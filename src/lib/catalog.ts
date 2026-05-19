@@ -31,7 +31,7 @@ export const CATEGORIES: Category[] = [
   { slug: "mugs", name: "Mugs", blurb: "Ceramic, matte and color-changing options." },
   { slug: "usb", name: "USB Flash", blurb: "Custom-shaped USB drives, 8GB–64GB." },
   { slug: "notebooks", name: "Notebooks", blurb: "Hardcover, soft-touch and eco kraft." },
-  { slug: "tshirts", name: "T-Shirts", blurb: "Premium cotton with full-color print." },
+  { slug: "banners", name: "Banners", blurb: "Roll-ups, vinyl and outdoor mesh banners." },
 ];
 
 /** Resolve a Supabase Storage URL for a product image. Returns null if not uploaded. */
