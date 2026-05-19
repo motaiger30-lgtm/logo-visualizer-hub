@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Upload, Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2 } from "lucide-react";
+import { Upload, Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
 import { CATEGORIES, CategorySlug, getCategory, productImageUrl } from "@/lib/catalog";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
+import urgentLogo1 from "@/assets/urgent-logo-1.png";
+import urgentLogo2 from "@/assets/urgent-logo-2.png";
+import urgentLogo3 from "@/assets/urgent-logo-3.png";
+
+const URGENT_PRESETS = [
+  { name: "Wordmark", src: urgentLogo1 },
+  { name: "Badge", src: urgentLogo2 },
+  { name: "Monogram", src: urgentLogo3 },
+];
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductImage } from "./ProductImage";
