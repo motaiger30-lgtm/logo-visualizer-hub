@@ -1,45 +1,93 @@
 // Static placeholder catalog — no real product photos until user uploads to Supabase Storage.
-// Once products/pens/<slug>/main.png exists in the products bucket, the UI auto-resolves it.
+// Once products/<category>/<slug>/main.png exists in the products bucket, the UI auto-resolves it.
 
 import { supabase } from "@/integrations/supabase/client";
 
-export type Pen = {
+export type Product = {
   slug: string;
   name: string;
-  description: string;
   moq: number;
 };
 
-export const PENS: Pen[] = [
-  { slug: "countertop-secure-desk", name: "Countertop Secure Desk Pen", description: "Anchored desk pen with secure base for clinics, banks and reception areas.", moq: 50 },
-  { slug: "executive-matte-stylus", name: "Executive Matte Stylus Pen", description: "Premium matte body with stylus tip — perfect for executive gifting.", moq: 100 },
-  { slug: "medical-syringe", name: "Medical Novelty Syringe Pen", description: "Liquid-filled syringe-style pen for pharma and medical campaigns.", moq: 200 },
-  { slug: "anatomical-bone", name: "Anatomical Bone Novelty Pen", description: "Conversation-starter bone-shaped pen for orthopedic clinics.", moq: 100 },
-  { slug: "sleek-minimalist", name: "Sleek Minimalist Corporate Pen", description: "Slim, geometric pen with a refined corporate finish.", moq: 100 },
-  { slug: "ergonomic-tech", name: "Ergonomic Tech Stylus Pen", description: "Soft-grip ergonomic body with capacitive stylus tip.", moq: 100 },
-  { slug: "elite-multi-texture", name: "Elite Multi Texture Gift Pen", description: "Bamboo, metal and matte composite — high-end gift packaging ready.", moq: 50 },
-];
+export type CategorySlug = "pens" | "mugs" | "usb" | "notebooks" | "tshirts";
 
 export type Category = {
-  slug: string;
+  slug: CategorySlug;
   name: string;
   blurb: string;
+  products: Product[];
 };
 
 export const CATEGORIES: Category[] = [
-  { slug: "pens", name: "Promotional Pens", blurb: "7 premium variants — executive, medical, novelty." },
-  { slug: "mugs", name: "Mugs", blurb: "Ceramic, matte and color-changing options." },
-  { slug: "usb", name: "USB Flash", blurb: "Custom-shaped USB drives, 8GB–64GB." },
-  { slug: "notebooks", name: "Notebooks", blurb: "Hardcover, soft-touch and eco kraft." },
-  { slug: "banners", name: "Banners", blurb: "Roll-ups, vinyl and outdoor mesh banners." },
+  {
+    slug: "pens",
+    name: "Promotional Pens",
+    blurb: "7 premium variants — executive, medical, novelty.",
+    products: [
+      { slug: "countertop-secure-desk", name: "Countertop Secure Desk Pen", moq: 50 },
+      { slug: "executive-matte-stylus", name: "Executive Matte Stylus", moq: 100 },
+      { slug: "medical-syringe", name: "Medical Syringe", moq: 200 },
+      { slug: "bone", name: "Bone Pen", moq: 100 },
+      { slug: "minimalist", name: "Minimalist", moq: 100 },
+      { slug: "tech-stylus", name: "Tech Stylus", moq: 100 },
+      { slug: "elite-gift", name: "Elite Gift", moq: 50 },
+    ],
+  },
+  {
+    slug: "mugs",
+    name: "Mugs",
+    blurb: "Ceramic, magic and travel mugs.",
+    products: [
+      { slug: "ceramic", name: "Ceramic Mug", moq: 50 },
+      { slug: "magic", name: "Magic Mug", moq: 50 },
+      { slug: "travel", name: "Travel Mug", moq: 50 },
+    ],
+  },
+  {
+    slug: "usb",
+    name: "USB Flash",
+    blurb: "Metal, card and wood USB drives.",
+    products: [
+      { slug: "metal", name: "Metal USB", moq: 50 },
+      { slug: "card", name: "Card USB", moq: 100 },
+      { slug: "wood", name: "Wood USB", moq: 50 },
+    ],
+  },
+  {
+    slug: "notebooks",
+    name: "Notebooks",
+    blurb: "PU, spiral and executive notebooks.",
+    products: [
+      { slug: "pu", name: "PU Notebook", moq: 50 },
+      { slug: "spiral", name: "Spiral Notebook", moq: 50 },
+      { slug: "executive", name: "Executive Notebook", moq: 50 },
+    ],
+  },
+  {
+    slug: "tshirts",
+    name: "T-Shirts",
+    blurb: "Cotton, polo and premium tees.",
+    products: [
+      { slug: "cotton", name: "Cotton", moq: 30 },
+      { slug: "polo", name: "Polo", moq: 30 },
+      { slug: "premium", name: "Premium", moq: 30 },
+    ],
+  },
 ];
 
-/** Resolve a Supabase Storage URL for a product image. Returns null if not uploaded. */
+export function getCategory(slug: CategorySlug): Category {
+  return CATEGORIES.find((c) => c.slug === slug) ?? CATEGORIES[0];
+}
+
+// Back-compat for any lingering imports
+export const PENS = CATEGORIES[0].products;
+export type Pen = Product;
+
+/** Resolve a Supabase Storage URL for a product image. */
 export function productImageUrl(folder: string, slug: string, file = "main.png") {
   return supabase.storage.from("products").getPublicUrl(`${folder}/${slug}/${file}`).data.publicUrl;
 }
 
-/** Check if an image actually exists (HEAD request). Used to fall back to branded placeholder. */
 export async function imageExists(url: string): Promise<boolean> {
   try {
     const r = await fetch(url, { method: "HEAD" });
