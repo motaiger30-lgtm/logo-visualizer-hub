@@ -1,21 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Upload, Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
-import { CATEGORIES, CategorySlug, getCategory, productImageUrl } from "@/lib/catalog";
+import { Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
+import { PRODUCTS, Product, ProductSlug, getProduct, productImageUrl } from "@/lib/catalog";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
 import urgentLogo3 from "@/assets/urgent-logo-3.png";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { supabase } from "@/integrations/supabase/client";
+import { ProductImage } from "./ProductImage";
+import { cn } from "@/lib/utils";
 
 const URGENT_PRESETS = [
   { name: "Heritage", src: urgentLogo1, bg: "bg-white" },
   { name: "Navy", src: urgentLogo2, bg: "bg-white" },
   { name: "White", src: urgentLogo3, bg: "bg-[#0D1146]" },
 ];
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { supabase } from "@/integrations/supabase/client";
-import { ProductImage } from "./ProductImage";
-import { cn } from "@/lib/utils";
 
 const COLORS = [
   { name: "Midnight", hex: "#0D1146" },
@@ -27,7 +27,7 @@ const COLORS = [
 ];
 
 const TIERS = [
-  { min: 50, max: 99, unit: 22 },
+  { min: 1, max: 99, unit: 22 },
   { min: 100, max: 249, unit: 18 },
   { min: 250, max: 499, unit: 15 },
   { min: 500, max: 999, unit: 12 },
@@ -35,37 +35,35 @@ const TIERS = [
 ];
 
 export function UniversalVisualizer() {
-  const [categorySlug, setCategorySlug] = useState<CategorySlug>("pens");
-  const category = getCategory(categorySlug);
-  const [productSlug, setProductSlug] = useState(category.products[0].slug);
-  const product = category.products.find((p) => p.slug === productSlug) ?? category.products[0];
+  const [productSlug, setProductSlug] = useState<ProductSlug>("pens");
+  const product = getProduct(productSlug);
   const [color, setColor] = useState(COLORS[1]);
   const [qty, setQty] = useState(100);
 
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
-  const [originalSrc, setOriginalSrc] = useState<string | null>(null);
+  const [, setOriginalSrc] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [logoScale, setLogoScale] = useState(1);
   const [logoX, setLogoX] = useState(0);
   const [logoY, setLogoY] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Reset product when category changes & listen for external category events
+  // Reset logo placement when product changes
   useEffect(() => {
-    setProductSlug(category.products[0].slug);
-    setQty((q) => Math.min(10000, Math.max(100, q)));
-  }, [categorySlug]);
+    setLogoX(0); setLogoY(0); setLogoScale(1);
+  }, [productSlug]);
 
+  // Listen for external product selection from Categories section
   useEffect(() => {
     const onPick = (e: Event) => {
-      const detail = (e as CustomEvent<{ category: CategorySlug }>).detail;
-      if (detail?.category) {
-        setCategorySlug(detail.category);
+      const detail = (e as CustomEvent<{ product: ProductSlug }>).detail;
+      if (detail?.product) {
+        setProductSlug(detail.product);
         document.getElementById("designer")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     };
-    window.addEventListener("urgent:set-category", onPick);
-    return () => window.removeEventListener("urgent:set-category", onPick);
+    window.addEventListener("urgent:set-product", onPick);
+    return () => window.removeEventListener("urgent:set-product", onPick);
   }, []);
 
   const tier = useMemo(() => TIERS.find((t) => qty >= t.min && qty <= t.max) ?? TIERS[TIERS.length - 1], [qty]);
@@ -100,15 +98,15 @@ export function UniversalVisualizer() {
 
   const handleQuote = () => {
     const url = buildWhatsAppUrl({
-      category: category.name,
+      category: product.name,
       product: product.name,
-      color: color.name,
+      color: product.supportsColor ? color.name : "—",
       quantity: qty,
       unitPriceEgp: tier.unit,
       totalEgp: total,
     });
     supabase.from("leads").insert({
-      category: category.name,
+      category: product.name,
       quantity: qty,
       total_egp: total,
       source: "whatsapp",
@@ -126,38 +124,24 @@ export function UniversalVisualizer() {
             Pick. Customize. Quote.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            One designer for every product. Choose a category, pick a style, upload your logo and get a live EGP price.
+            One designer for every product. Pick one of our 5 products, upload your logo and get a live EGP price.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_420px] gap-6">
-          {/* Preview */}
           <Preview
-            category={categorySlug}
-            productSlug={product.slug}
-            productLabel={product.name}
-            colorHex={color.hex}
+            product={product}
+            colorHex={product.supportsColor ? color.hex : "#0D1146"}
             logoSrc={logoSrc}
             logoScale={logoScale}
             logoX={logoX} logoY={logoY}
             setLogoX={setLogoX} setLogoY={setLogoY}
           />
 
-          {/* Controls */}
           <div className="glass-strong rounded-3xl p-5 space-y-6">
-            <Step n={1} label="Category">
+            <Step n={1} label="Product">
               <div className="flex flex-wrap gap-1.5">
-                {CATEGORIES.map((c) => (
-                  <Chip key={c.slug} active={categorySlug === c.slug} onClick={() => setCategorySlug(c.slug)}>
-                    {c.name}
-                  </Chip>
-                ))}
-              </div>
-            </Step>
-
-            <Step n={2} label="Product">
-              <div className="flex flex-wrap gap-1.5">
-                {category.products.map((p) => (
+                {PRODUCTS.map((p) => (
                   <Chip key={p.slug} active={productSlug === p.slug} onClick={() => setProductSlug(p.slug)}>
                     {p.name}
                   </Chip>
@@ -165,30 +149,38 @@ export function UniversalVisualizer() {
               </div>
             </Step>
 
-            <Step n={3} label="Color">
-              <div className="flex flex-wrap gap-1.5">
-                {COLORS.map((c) => (
-                  <button
-                    key={c.hex}
-                    onClick={() => setColor(c)}
-                    className={cn(
-                      "flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-                      color.hex === c.hex
-                        ? "border-accent bg-white/5 text-foreground"
-                        : "border-white/10 text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <span className="h-4 w-4 rounded-full border border-white/20" style={{ background: c.hex }} />
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </Step>
+            {product.supportsColor ? (
+              <Step n={2} label="Color">
+                <div className="flex flex-wrap gap-1.5">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c.hex}
+                      onClick={() => setColor(c)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                        color.hex === c.hex
+                          ? "border-accent bg-white/5 text-foreground"
+                          : "border-white/10 text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <span className="h-4 w-4 rounded-full border border-white/20" style={{ background: c.hex }} />
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </Step>
+            ) : (
+              <Step n={2} label="Print">
+                <p className="text-[11px] text-muted-foreground">
+                  Banners are full-color printed from your artwork — no base color selection needed.
+                </p>
+              </Step>
+            )}
 
-            <Step n={4} label={`Quantity (min 100)`}>
+            <Step n={3} label="Quantity (min 1)">
               <div className="flex items-center gap-3">
                 <input
-                  type="range" min={100} max={10000} step={50}
+                  type="range" min={1} max={10000} step={1}
                   value={qty}
                   onChange={(e) => setQty(Number(e.target.value))}
                   className="flex-1 accent-[color:var(--primary)]"
@@ -196,15 +188,15 @@ export function UniversalVisualizer() {
                 <input
                   type="number"
                   value={qty}
-                  min={100}
+                  min={1}
                   max={10000}
-                  onChange={(e) => setQty(Math.min(10000, Math.max(100, Number(e.target.value))))}
+                  onChange={(e) => setQty(Math.min(10000, Math.max(1, Number(e.target.value))))}
                   className="w-20 rounded-lg glass px-2.5 py-2 text-sm text-foreground"
                 />
               </div>
             </Step>
 
-            <Step n={5} label="Logo">
+            <Step n={4} label="Logo">
               <label className="block cursor-pointer rounded-2xl border border-dashed border-white/15 px-4 py-5 text-center hover:border-primary hover:bg-primary/5 transition-all">
                 <input
                   ref={fileRef}
@@ -248,7 +240,6 @@ export function UniversalVisualizer() {
                 </div>
               )}
 
-              {/* Try with Urgent logo */}
               <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-3.5 w-3.5 text-accent" />
@@ -278,7 +269,6 @@ export function UniversalVisualizer() {
               </div>
             </Step>
 
-            {/* Price + CTA */}
             <div className="rounded-2xl glass p-4 space-y-3">
               <div className="flex items-end justify-between">
                 <div>
@@ -311,12 +301,10 @@ export function UniversalVisualizer() {
 }
 
 function Preview({
-  category, productSlug, productLabel, colorHex,
+  product, colorHex,
   logoSrc, logoScale, logoX, logoY, setLogoX, setLogoY,
 }: {
-  category: CategorySlug;
-  productSlug: string;
-  productLabel: string;
+  product: Product;
   colorHex: string;
   logoSrc: string | null;
   logoScale: number;
@@ -352,12 +340,12 @@ function Preview({
     const r = ref.current.getBoundingClientRect();
     const dx = (e.clientX - dragStart.current.px) / r.width;
     const dy = (e.clientY - dragStart.current.py) / r.height;
-    setLogoX(Math.max(-0.25, Math.min(0.25, dragStart.current.lx + dx)));
-    setLogoY(Math.max(-0.15, Math.min(0.15, dragStart.current.ly + dy)));
+    setLogoX(Math.max(-0.35, Math.min(0.35, dragStart.current.lx + dx)));
+    setLogoY(Math.max(-0.35, Math.min(0.35, dragStart.current.ly + dy)));
   };
   const onLogoUp = () => setDragging(false);
 
-  const ratio = category === "pens" || category === "usb" ? "tall" : "wide" as const;
+  const area = product.printArea;
 
   return (
     <div className="relative">
@@ -374,9 +362,9 @@ function Preview({
         />
         <div className="absolute inset-8 flex items-center justify-center">
           <ProductImage
-            src={productImageUrl(category, productSlug)}
-            label={productLabel}
-            ratio={ratio}
+            src={productImageUrl(product.file)}
+            label={product.name}
+            ratio={product.aspect}
             className="w-full max-w-md"
           />
         </div>
@@ -392,14 +380,15 @@ function Preview({
               dragging && "cursor-grabbing",
             )}
             style={{
-              transform: `translate(calc(-50% + ${logoX * 100}%), calc(-50% + ${logoY * 100}%)) scale(${logoScale})`,
+              transform: `translate(calc(-50% + ${(area.x + logoX) * 100}%), calc(-50% + ${(area.y + logoY) * 100}%)) scale(${logoScale})`,
             }}
           >
             <img
               src={logoSrc}
               alt="Your logo"
               draggable={false}
-              className="max-w-[180px] max-h-[80px] drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+              style={{ maxWidth: area.maxLogoPx, maxHeight: area.maxLogoPx * 0.7 }}
+              className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
             />
           </div>
         )}
@@ -410,11 +399,19 @@ function Preview({
           style={{ background: gloss }}
         />
 
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-[5] h-[25%] w-[55%] -translate-x-1/2 -translate-y-1/2 rounded-md border border-dashed border-accent/50" />
+        {/* Per-product print-area guide */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 z-[5] rounded-md border border-dashed border-accent/50"
+          style={{
+            width: `${area.w * 100}%`,
+            height: `${area.h * 100}%`,
+            transform: `translate(calc(-50% + ${area.x * 100}%), calc(-50% + ${area.y * 100}%))`,
+          }}
+        />
       </motion.div>
 
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        Hover for 3D · drag the logo to position
+        Hover for 3D · drag the logo to position · print area outlined in dashed box
       </p>
     </div>
   );

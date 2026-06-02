@@ -2,11 +2,11 @@ import { motion, useMotionValue, useTransform, useSpring, MotionValue } from "fr
 import { useEffect, useRef } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ProductImage } from "./ProductImage";
-import { PENS, productImageUrl, Pen } from "@/lib/catalog";
+import { PRODUCTS, Product, productImageUrl } from "@/lib/catalog";
 
-type Float = { pen: Pen; x: string; y: string; depth: number; rot: number; size: number };
+type Float = { product: Product; x: string; y: string; depth: number; rot: number; size: number };
 
-function FloatingPen({ f, sx, sy }: { f: Float; sx: MotionValue<number>; sy: MotionValue<number> }) {
+function FloatingProduct({ f, sx, sy }: { f: Float; sx: MotionValue<number>; sy: MotionValue<number> }) {
   const tx = useTransform(sx, (v) => v * f.depth);
   const ty = useTransform(sy, (v) => v * f.depth);
   return (
@@ -15,9 +15,9 @@ function FloatingPen({ f, sx, sy }: { f: Float; sx: MotionValue<number>; sy: Mot
       className="absolute animate-float opacity-80"
     >
       <ProductImage
-        src={productImageUrl("pens", f.pen.slug)}
-        label={f.pen.name}
-        ratio="tall"
+        src={productImageUrl(f.product.file)}
+        label={f.product.name}
+        ratio={f.product.aspect}
         className="shadow-glow"
       />
     </motion.div>
@@ -43,11 +43,11 @@ export function Hero() {
     return () => el.removeEventListener("mousemove", onMove);
   }, [mx, my]);
 
-  const floats = [
-    { pen: PENS[1], x: "-8%", y: "10%", depth: 40, rot: -12, size: 240 },
-    { pen: PENS[4], x: "78%", y: "8%", depth: 60, rot: 14, size: 220 },
-    { pen: PENS[2], x: "5%", y: "62%", depth: 30, rot: 20, size: 200 },
-    { pen: PENS[6], x: "75%", y: "65%", depth: 50, rot: -8, size: 260 },
+  const floats: Float[] = [
+    { product: PRODUCTS[0], x: "-8%", y: "10%", depth: 40, rot: -12, size: 220 },
+    { product: PRODUCTS[3], x: "78%", y: "6%", depth: 60, rot: 8, size: 240 },
+    { product: PRODUCTS[1], x: "5%", y: "62%", depth: 30, rot: 6, size: 240 },
+    { product: PRODUCTS[4], x: "75%", y: "60%", depth: 50, rot: -6, size: 240 },
   ];
 
   return (
@@ -55,14 +55,12 @@ export function Hero() {
       ref={ref}
       className="relative isolate overflow-hidden pt-32 pb-24 sm:pt-40 sm:pb-32 bg-gradient-hero"
     >
-      {/* glow orbs */}
       <div className="pointer-events-none absolute -top-32 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-glow opacity-60" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-gradient-glow opacity-40" />
 
-      {/* floating products */}
       <div className="pointer-events-none absolute inset-0 hidden lg:block">
         {floats.map((f, i) => (
-          <FloatingPen key={i} f={f} sx={sx} sy={sy} />
+          <FloatingProduct key={i} f={f} sx={sx} sy={sy} />
         ))}
       </div>
 
@@ -77,8 +75,8 @@ export function Hero() {
         </h1>
 
         <p className="mx-auto mt-6 max-w-xl text-base sm:text-lg text-muted-foreground">
-          Upload your logo and instantly preview promotional products before printing.
-          Real-time visualization, premium quality, fast delivery.
+          Upload your logo and instantly preview Pens, Notebooks, Flash Drives, Roll-ups and X-Banners
+          before printing. Real-time visualization, premium quality, fast delivery.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
