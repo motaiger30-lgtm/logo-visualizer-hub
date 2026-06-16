@@ -2,7 +2,7 @@ import { motion, useMotionValue, useTransform, useSpring, MotionValue } from "fr
 import { useEffect, useRef } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ProductImage } from "./ProductImage";
-import { PRODUCTS, Product, productImageUrl } from "@/lib/catalog";
+import { PRODUCTS, Product } from "@/lib/catalog";
 
 type Float = { product: Product; x: string; y: string; depth: number; rot: number; size: number };
 
@@ -15,7 +15,7 @@ function FloatingProduct({ f, sx, sy }: { f: Float; sx: MotionValue<number>; sy:
       className="absolute animate-float opacity-80"
     >
       <ProductImage
-        src={productImageUrl(f.product.file)}
+        src={f.product.image}
         label={f.product.name}
         ratio={f.product.aspect}
         className="shadow-glow"
