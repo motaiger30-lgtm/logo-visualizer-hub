@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
-import { PRODUCTS, Product, ProductSlug, getProduct } from "@/lib/catalog";
+import { PRODUCTS, Product, ProductSlug, ProductVariant, PrintArea, getProduct } from "@/lib/catalog";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
@@ -37,21 +37,32 @@ const TIERS = [
 export function UniversalVisualizer() {
   const [productSlug, setProductSlug] = useState<ProductSlug>("pens");
   const product = getProduct(productSlug);
+  const [variantId, setVariantId] = useState<string>(product.variants?.[0]?.id ?? "");
+  const variant = product.variants?.find((v) => v.id === variantId) ?? product.variants?.[0];
+  const activeImage = variant?.image ?? product.image;
+  const activeArea: PrintArea = variant?.printArea ?? product.printArea;
+
   const [color, setColor] = useState(COLORS[1]);
   const [qty, setQty] = useState(100);
 
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const [, setOriginalSrc] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
+  const [extractStage, setExtractStage] = useState<string>("Extracting logo…");
   const [logoScale, setLogoScale] = useState(1);
   const [logoX, setLogoX] = useState(0);
   const [logoY, setLogoY] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Reset logo placement when product changes
+  // Reset variant when product changes
+  useEffect(() => {
+    setVariantId(product.variants?.[0]?.id ?? "");
+  }, [productSlug, product.variants]);
+
+  // Reset logo placement when product OR variant changes
   useEffect(() => {
     setLogoX(0); setLogoY(0); setLogoScale(1);
-  }, [productSlug]);
+  }, [productSlug, variantId]);
 
   // Listen for external product selection from Categories section
   useEffect(() => {
@@ -69,13 +80,14 @@ export function UniversalVisualizer() {
   const tier = useMemo(() => TIERS.find((t) => qty >= t.min && qty <= t.max) ?? TIERS[TIERS.length - 1], [qty]);
   const total = tier.unit * qty;
 
-  const handleFile = async (file: File) => {
+  const runExtract = async (file: File | Blob) => {
     setExtracting(true);
+    setExtractStage("Extracting logo…");
     setLogoX(0); setLogoY(0); setLogoScale(1);
     try {
       const orig = await fileToDataURL(file);
       setOriginalSrc(orig);
-      const extracted = await extractLogo(file);
+      const extracted = await extractLogo(file, (s) => setExtractStage(s));
       setLogoSrc(extracted);
     } catch {
       const fallback = await fileToDataURL(file);
@@ -86,20 +98,33 @@ export function UniversalVisualizer() {
   };
 
   const retry = async () => {
-    if (!fileRef.current?.files?.[0]) return;
+    const f = fileRef.current?.files?.[0];
+    if (!f) return;
+    await runExtract(f);
+  };
+
+  const useUrgentPreset = async (src: string) => {
     setExtracting(true);
+    setExtractStage("Optimizing preview…");
+    setLogoX(0); setLogoY(0); setLogoScale(1);
     try {
-      const extracted = await extractLogo(fileRef.current.files[0], 50);
+      const res = await fetch(src);
+      const blob = await res.blob();
+      const extracted = await extractLogo(blob, (s) => setExtractStage(s));
+      setOriginalSrc(src);
       setLogoSrc(extracted);
+    } catch {
+      setLogoSrc(src);
     } finally {
       setExtracting(false);
     }
   };
 
   const handleQuote = () => {
+    const productName = variant ? `${product.name} — ${variant.name}` : product.name;
     const url = buildWhatsAppUrl({
       category: product.name,
-      product: product.name,
+      product: productName,
       color: product.supportsColor ? color.name : "—",
       quantity: qty,
       unitPriceEgp: tier.unit,
@@ -124,22 +149,25 @@ export function UniversalVisualizer() {
             Pick. Customize. Quote.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            One designer for every product. Pick one of our 5 products, upload your logo and get a live EGP price.
+            Pick a product, pick a style, drop your logo — and watch it land on the real surface in real time.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_420px] gap-6">
           <Preview
-            product={product}
+            image={activeImage}
+            label={variant?.name ?? product.name}
+            ratio={product.aspect}
             colorHex={product.supportsColor ? color.hex : "#0D1146"}
             logoSrc={logoSrc}
             logoScale={logoScale}
             logoX={logoX} logoY={logoY}
             setLogoX={setLogoX} setLogoY={setLogoY}
+            area={activeArea}
           />
 
           <div className="glass-strong rounded-3xl p-5 space-y-6">
-            <Step n={1} label="Product">
+            <Step n={1} label="Category">
               <div className="flex flex-wrap gap-1.5">
                 {PRODUCTS.map((p) => (
                   <Chip key={p.slug} active={productSlug === p.slug} onClick={() => setProductSlug(p.slug)}>
@@ -149,8 +177,39 @@ export function UniversalVisualizer() {
               </div>
             </Step>
 
+            {product.variants && product.variants.length > 0 && (
+              <Step n={2} label={`Pen type (${product.variants.length})`}>
+                <div className="grid grid-cols-2 gap-2">
+                  {product.variants.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setVariantId(v.id)}
+                      className={cn(
+                        "group relative flex items-center gap-2 rounded-xl border p-2 text-left transition-all",
+                        variantId === v.id
+                          ? "border-accent bg-white/10 shadow-glow-soft"
+                          : "border-white/10 hover:border-white/25 hover:bg-white/5",
+                      )}
+                    >
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/5">
+                        <img src={v.image} alt={v.name} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-[11px] font-semibold text-foreground leading-tight">
+                          {v.name}
+                        </p>
+                        {v.placeholder && (
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">studio mock</p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </Step>
+            )}
+
             {product.supportsColor ? (
-              <Step n={2} label="Color">
+              <Step n={product.variants ? 3 : 2} label="Color">
                 <div className="flex flex-wrap gap-1.5">
                   {COLORS.map((c) => (
                     <button
@@ -177,7 +236,7 @@ export function UniversalVisualizer() {
               </Step>
             )}
 
-            <Step n={3} label="Quantity (min 1)">
+            <Step n={product.variants ? 4 : 3} label="Quantity (min 1)">
               <div className="flex items-center gap-3">
                 <input
                   type="range" min={1} max={10000} step={1}
@@ -196,19 +255,19 @@ export function UniversalVisualizer() {
               </div>
             </Step>
 
-            <Step n={4} label="Logo">
+            <Step n={product.variants ? 5 : 4} label="Logo">
               <label className="block cursor-pointer rounded-2xl border border-dashed border-white/15 px-4 py-5 text-center hover:border-primary hover:bg-primary/5 transition-all">
                 <input
                   ref={fileRef}
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   className="hidden"
-                  onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                  onChange={(e) => e.target.files?.[0] && runExtract(e.target.files[0])}
                 />
                 {extracting ? (
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                    <span className="text-xs">Extracting logo…</span>
+                    <span className="text-xs">{extractStage}</span>
                   </div>
                 ) : logoSrc ? (
                   <div className="flex items-center justify-center gap-3">
@@ -219,7 +278,7 @@ export function UniversalVisualizer() {
                   <div className="flex flex-col items-center gap-1.5 text-muted-foreground">
                     <ImageIcon className="h-5 w-5 text-primary" />
                     <span className="text-sm font-semibold text-foreground">Upload your logo</span>
-                    <span className="text-[11px]">PNG, JPG — background auto-removed</span>
+                    <span className="text-[11px]">PNG, JPG, screenshot — background auto-removed</span>
                   </div>
                 )}
               </label>
@@ -251,11 +310,7 @@ export function UniversalVisualizer() {
                   {URGENT_PRESETS.map((p) => (
                     <button
                       key={p.name}
-                      onClick={() => {
-                        setOriginalSrc(p.src);
-                        setLogoSrc(p.src);
-                        setLogoX(0); setLogoY(0); setLogoScale(1);
-                      }}
+                      onClick={() => useUrgentPreset(p.src)}
                       className={cn(
                         "group rounded-xl p-2 aspect-square flex items-center justify-center transition shadow-sm hover:shadow-glow-soft",
                         p.bg,
@@ -301,25 +356,28 @@ export function UniversalVisualizer() {
 }
 
 function Preview({
-  product, colorHex,
-  logoSrc, logoScale, logoX, logoY, setLogoX, setLogoY,
+  image, label, ratio, colorHex,
+  logoSrc, logoScale, logoX, logoY, setLogoX, setLogoY, area,
 }: {
-  product: Product;
+  image: string;
+  label: string;
+  ratio: "tall" | "wide";
   colorHex: string;
   logoSrc: string | null;
   logoScale: number;
   logoX: number; logoY: number;
   setLogoX: (v: number) => void; setLogoY: (v: number) => void;
+  area: PrintArea;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 100, damping: 18 });
   const sy = useSpring(my, { stiffness: 100, damping: 18 });
-  const rotY = useTransform(sx, [-1, 1], [-10, 10]);
-  const rotX = useTransform(sy, [-1, 1], [6, -6]);
+  const rotY = useTransform(sx, [-1, 1], [-8, 8]);
+  const rotX = useTransform(sy, [-1, 1], [5, -5]);
   const glossX = useTransform(sx, [-1, 1], ["20%", "80%"]);
-  const gloss = useTransform(glossX, (v) => `linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) ${v}, transparent 70%)`);
+  const gloss = useTransform(glossX, (v) => `linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.12) ${v}, transparent 70%)`);
 
   const onMove = (e: React.MouseEvent) => {
     const r = ref.current!.getBoundingClientRect();
@@ -340,12 +398,13 @@ function Preview({
     const r = ref.current.getBoundingClientRect();
     const dx = (e.clientX - dragStart.current.px) / r.width;
     const dy = (e.clientY - dragStart.current.py) / r.height;
-    setLogoX(Math.max(-0.35, Math.min(0.35, dragStart.current.lx + dx)));
-    setLogoY(Math.max(-0.35, Math.min(0.35, dragStart.current.ly + dy)));
+    setLogoX(Math.max(-0.45, Math.min(0.45, dragStart.current.lx + dx)));
+    setLogoY(Math.max(-0.45, Math.min(0.45, dragStart.current.ly + dy)));
   };
   const onLogoUp = () => setDragging(false);
 
-  const area = product.printArea;
+  const blend = area.blend ?? "normal";
+  const rotate = area.rotate ?? 0;
 
   return (
     <div className="relative">
@@ -357,15 +416,15 @@ function Preview({
         className="relative aspect-[4/5] sm:aspect-[5/4] rounded-3xl glass-strong overflow-hidden"
       >
         <div
-          className="absolute inset-0 opacity-25 transition-colors duration-500"
+          className="absolute inset-0 opacity-20 transition-colors duration-500"
           style={{ background: `radial-gradient(circle at 50% 40%, ${colorHex}, transparent 60%)` }}
         />
-        <div className="absolute inset-8 flex items-center justify-center">
+        <div className="absolute inset-4 sm:inset-6 flex items-center justify-center">
           <ProductImage
-            src={product.image}
-            label={product.name}
-            ratio={product.aspect}
-            className="w-full max-w-md"
+            src={image}
+            label={label}
+            ratio={ratio}
+            className="w-full max-w-xl"
           />
         </div>
 
@@ -380,15 +439,20 @@ function Preview({
               dragging && "cursor-grabbing",
             )}
             style={{
-              transform: `translate(calc(-50% + ${(area.x + logoX) * 100}%), calc(-50% + ${(area.y + logoY) * 100}%)) scale(${logoScale})`,
+              transform: `translate(calc(-50% + ${(area.x + logoX) * 100}%), calc(-50% + ${(area.y + logoY) * 100}%)) scale(${logoScale}) rotate(${rotate}deg)`,
+              mixBlendMode: blend,
             }}
           >
             <img
               src={logoSrc}
               alt="Your logo"
               draggable={false}
-              style={{ maxWidth: area.maxLogoPx, maxHeight: area.maxLogoPx * 0.7 }}
-              className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+              style={{
+                maxWidth: area.maxLogoPx,
+                maxHeight: area.maxLogoPx * 0.7,
+                filter: blend === "multiply" ? "contrast(1.05) saturate(1.1)" : undefined,
+              }}
+              className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.25)]"
             />
           </div>
         )}
@@ -401,17 +465,17 @@ function Preview({
 
         {/* Per-product print-area guide */}
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 z-[5] rounded-md border border-dashed border-accent/50"
+          className="pointer-events-none absolute left-1/2 top-1/2 z-[5] rounded-md border border-dashed border-accent/40"
           style={{
             width: `${area.w * 100}%`,
             height: `${area.h * 100}%`,
-            transform: `translate(calc(-50% + ${area.x * 100}%), calc(-50% + ${area.y * 100}%))`,
+            transform: `translate(calc(-50% + ${area.x * 100}%), calc(-50% + ${area.y * 100}%)) rotate(${rotate}deg)`,
           }}
         />
       </motion.div>
 
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        Hover for 3D · drag the logo to position · print area outlined in dashed box
+        Hover for 3D · drag the logo to position · dashed box = printable area
       </p>
     </div>
   );
@@ -435,7 +499,9 @@ function Chip({ active, onClick, children }: { active?: boolean; onClick?: () =>
       onClick={onClick}
       className={cn(
         "rounded-full px-3 py-1.5 text-[11px] font-medium transition-all",
-        active ? "bg-gradient-primary text-primary-foreground shadow-glow-soft" : "glass text-muted-foreground hover:text-foreground",
+        active
+          ? "bg-gradient-primary text-primary-foreground shadow-glow-soft"
+          : "glass text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
