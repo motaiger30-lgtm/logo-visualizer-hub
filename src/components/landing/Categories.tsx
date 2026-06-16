@@ -1,4 +1,4 @@
-import { PRODUCTS, ProductSlug, productImageUrl } from "@/lib/catalog";
+import { PRODUCTS, ProductSlug } from "@/lib/catalog";
 import { ProductImage } from "./ProductImage";
 import { ArrowUpRight } from "lucide-react";
 
