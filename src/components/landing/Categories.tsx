@@ -1,4 +1,4 @@
-import { PRODUCTS, ProductSlug, productImageUrl } from "@/lib/catalog";
+import { PRODUCTS, ProductSlug } from "@/lib/catalog";
 import { ProductImage } from "./ProductImage";
 import { ArrowUpRight } from "lucide-react";
 
@@ -32,7 +32,7 @@ export function Categories() {
               <div className="absolute inset-0 bg-gradient-glow opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
               <div className="relative">
                 <ProductImage
-                  src={productImageUrl(p.file)}
+                  src={p.image}
                   label={p.name}
                   ratio="wide"
                   className="mb-5 group-hover:scale-[1.02] transition-transform duration-500"

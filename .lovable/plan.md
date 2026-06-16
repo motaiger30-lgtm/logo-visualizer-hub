@@ -1,77 +1,62 @@
-
 ## Goal
 
-Cut the catalog to exactly **5 products**, load each product image from the external Supabase project `mvveblnncwjjenwvsebs` (public `products` bucket), and make the logo visualizer respect a **product-specific print area** (so the logo on a pen barrel is small/centered, while on an X-banner it sits in the upper third with a large area).
+Stop fetching product images from the external Supabase `products` bucket. Use the 7 uploaded promo images as the source of truth, AI-clean them into mockup-ready product shots, and bundle them as local assets imported by the visualizer.
 
----
+## What the uploads actually contain
 
-## File naming you'll upload to the `products` bucket
+After inspecting all 7 attachments:
+- **Pens** — covered heavily: classic plastic pen on stand (1.jpg), white capped pens (2.jpg), bone/anatomy novelty pens (3.jpg), mixed executive/wood/metal pen tray (4.jpg), colored medical pens (5.jpg, 7.jpg).
+- **Notebook** — covered: PU notebook with elastic strap on desk (1.jpg, 686191406…jpg — the "YOUR LOGO" mockup is the cleanest reference).
+- **Flash drive, Roll-up banner, X-Banner** — NOT present in any upload → fallback placeholder.
 
-Upload exactly these 5 files (PNG, transparent or white bg). Once uploaded they auto-appear — no code change needed:
+Every promo image has heavy Arabic text overlays, the Urgent logo, and phone-number badges that must be removed before the image can be used as a product shot.
 
-```
-products/pens.png
-products/notebook.png
-products/flashcard.png
-products/rollup.png
-products/xbanner.png
-```
+## Plan
 
-Public URL pattern used by the app:
-`https://mvveblnncwjjenwvsebs.supabase.co/storage/v1/object/public/products/<file>.png`
+### 1. Generate clean product assets from uploads (via `imagegen--edit_image`)
 
-(If you later want multiple pen variants, we can switch pens to `products/pens/<variant>.png` — for now: one image per product.)
+For each needed product, run an AI edit on the best source upload to:
+- remove all text overlays, badges, logos, arrows
+- isolate the product centered on a soft neutral desk/studio background
+- keep the product photographic and mockup-ready (logo will be overlaid later)
 
----
+Outputs (saved as local files, imported directly — no CDN, no Supabase):
+- `src/assets/products/pens.jpg` ← edited from `user-uploads://4.jpg` (richest pen variety)
+- `src/assets/products/notebook.jpg` ← edited from `user-uploads://686191406_…jpg` (cleanest notebook mockup, with the "YOUR LOGO" graphic removed)
 
-## Changes
+### 2. Generate placeholders for missing categories
 
-### 1. `src/lib/catalog.ts` — rewrite to 5 products
-Replace all categories with a flat list of 5 products. Each entry carries its own `printArea` (relative coords inside the preview frame):
+No uploads cover these — generate neutral mockup shots with `imagegen--generate_image`:
+- `src/assets/products/flashcard.jpg` — metal USB flash drive on desk
+- `src/assets/products/rollup.jpg` — blank retractable roll-up banner, studio
+- `src/assets/products/xbanner.jpg` — blank X-stand banner, studio
 
-```text
-Product       | Image file       | Aspect | Print area (x, y, w, h, max logo)
---------------|------------------|--------|----------------------------------
-Pens          | pens.png         | tall   | centered narrow strip on barrel
-Notebook      | notebook.png     | wide   | center of cover, medium
-Flash Card    | flashcard.png    | wide   | upper-center, small
-Roll-up       | rollup.png       | tall   | upper third, large
-X-Banner      | xbanner.png      | tall   | upper third, large
-```
+These are clearly flagged in `catalog.ts` as `placeholder: true` so they can be swapped later when the user uploads real shots.
 
-Also add a `productImageUrl(slug)` helper that builds the external Supabase URL above (no longer uses the current project's `supabase.storage`).
+### 3. Rewire the catalog to local imports
 
-### 2. `src/components/landing/UniversalVisualizer.tsx`
-- Drop the **Category → Product** two-step flow. Replace with a single **Product** chip row (5 items).
-- Replace the color list to keep current 6 colors but hide it for `rollup` / `xbanner` (banners use the printed artwork, not a base color) — show a subtle note instead.
-- Read `product.printArea` and pass it to `<Preview>` so:
-  - Dashed guide rectangle is positioned/sized per product.
-  - Logo initial scale + max bounds derive from `printArea` (pen ≈ 90px wide, banner ≈ 320px wide).
-- Keep: logo upload + auto bg-removal, Urgent preset logos, drag-to-position, WhatsApp CTA, quantity 100–10000, tiered pricing.
+`src/lib/catalog.ts`:
+- Delete `EXTERNAL_PRODUCTS_URL` and `productImageUrl()`.
+- Replace each product's `file: string` with `image: <imported asset URL>` using ES imports of the 5 files above.
+- Keep all other fields (slug, name, blurb, moq, aspect, supportsColor, printArea) unchanged so the visualizer keeps its per-product logo placement logic.
 
-### 3. `src/components/landing/Categories.tsx`
-Simplify to show the 5 products as cards (no category grouping). Clicking a card scrolls to the visualizer and selects that product (reuse the existing `urgent:set-category` event, renamed to `urgent:set-product`).
+### 4. Update the visualizer to use the local image
 
-### 4. `src/routes/index.tsx`
-No structural change — same section order (Hero → Products → Visualizer → Pricing → Social proof → CTA). Just confirms the new Categories/Visualizer wiring.
+`src/components/landing/UniversalVisualizer.tsx`:
+- Drop the `productImageUrl(product.file)` call.
+- Pass `product.image` straight into `<ProductImage src={product.image} … />`.
+- No other UI changes — chips, color picker gating, print-area dashed box, logo drag, quantity 1–10000, tiered pricing, WhatsApp CTA all stay identical.
 
-### 5. Hero copy
-Tighten the headline subline to mention the 5 products explicitly ("Pens, Notebooks, Flash Drives, Roll-ups, X-Banners").
+### 5. Categories grid
 
----
+`src/components/landing/Categories.tsx`: same change — read `product.image` instead of `productImageUrl(...)`.
 
-## Technical notes
+### 6. Cleanup
 
-- No second `createClient` needed — external images are loaded as plain `<img src>` from the public bucket URL, which is allowed by Supabase storage CORS for public buckets.
-- `print_area` lives in code (not DB) for now: `{ x, y, w, h, maxLogoPx }` in relative units (0–1) inside the preview frame.
-- If any of the 5 files are missing in your bucket the `<ProductImage>` fallback already shows a labeled placeholder, so nothing breaks before you upload.
-- The existing `products` Supabase bucket on **this** project becomes unused for product images (kept for future use, no deletion).
+- Remove now-unused `productImageUrl` export.
+- Keep `ProductImage.tsx` as-is (it already accepts any `src`).
+- No Supabase client changes — the `supabase` import in the visualizer is still used to log leads.
 
----
+## Result
 
-## Out of scope (ask if you want them)
-- Multiple pen variants/colors on real photos.
-- 3D-baked mockups per product.
-- Admin UI to edit print areas.
-
-Reply **Approve** to implement, or tell me what to adjust (e.g. different print-area sizes, keep category flow, add pen variants).
+Site renders product cards and the visualizer preview entirely from local bundled images. Pens and Notebook are derived from the user's real uploads (text removed, isolated). Flash drive / Roll-up / X-Banner show neutral placeholders until the user uploads real source images, at which point we re-run step 1 for those slugs.

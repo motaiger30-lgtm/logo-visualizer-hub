@@ -1,14 +1,12 @@
-// Flat catalog of 5 products. Images are served from an external Supabase
-// project's public `products` bucket. Drop these 5 files into that bucket
-// and they auto-appear in the UI:
-//   products/pens.png
-//   products/notebook.png
-//   products/flashcard.png
-//   products/rollup.png
-//   products/xbanner.png
+// Flat catalog of 5 products. Images are bundled locally — derived from
+// uploaded source material (or generated placeholders for categories the
+// user hasn't supplied source images for yet).
 
-const EXTERNAL_PRODUCTS_URL =
-  "https://mvveblnncwjjenwvsebs.supabase.co/storage/v1/object/public/products";
+import pensImg from "@/assets/products/pens.jpg";
+import notebookImg from "@/assets/products/notebook.jpg";
+import flashcardImg from "@/assets/products/flashcard.jpg";
+import rollupImg from "@/assets/products/rollup.jpg";
+import xbannerImg from "@/assets/products/xbanner.jpg";
 
 export type PrintArea = {
   /** center offset from preview center, relative 0..1 of frame size */
@@ -33,11 +31,13 @@ export type Product = {
   name: string;
   blurb: string;
   moq: number;
-  /** filename inside the external `products` bucket */
-  file: string;
+  /** Bundled image URL (Vite import) */
+  image: string;
   aspect: "tall" | "wide";
   /** if false, hide color picker (banners etc.) */
   supportsColor: boolean;
+  /** true = generic stock/AI shot, false = derived from user-uploaded source */
+  placeholder: boolean;
   printArea: PrintArea;
 };
 
@@ -45,60 +45,60 @@ export const PRODUCTS: Product[] = [
   {
     slug: "pens",
     name: "Promotional Pens",
-    blurb: "Executive, medical and stylus pens — pad-printed barrel.",
+    blurb: "Executive, metal, wood and stylus pens — pad-printed or laser-engraved barrel.",
     moq: 100,
-    file: "pens.png",
-    aspect: "tall",
+    image: pensImg,
+    aspect: "wide",
     supportsColor: true,
-    printArea: { x: 0, y: 0.02, w: 0.35, h: 0.06, maxLogoPx: 110 },
+    placeholder: false,
+    printArea: { x: 0.05, y: 0.05, w: 0.25, h: 0.06, maxLogoPx: 90 },
   },
   {
     slug: "notebook",
     name: "Notebooks",
     blurb: "PU, spiral and executive notebooks — debossed or printed cover.",
     moq: 50,
-    file: "notebook.png",
+    image: notebookImg,
     aspect: "wide",
     supportsColor: true,
-    printArea: { x: 0, y: 0, w: 0.45, h: 0.3, maxLogoPx: 180 },
+    placeholder: false,
+    printArea: { x: -0.02, y: -0.05, w: 0.28, h: 0.22, maxLogoPx: 160 },
   },
   {
     slug: "flashcard",
     name: "Flash Drives",
     blurb: "Metal, card and wood USB flash drives — laser engraved.",
     moq: 50,
-    file: "flashcard.png",
+    image: flashcardImg,
     aspect: "wide",
     supportsColor: true,
-    printArea: { x: 0, y: -0.05, w: 0.3, h: 0.1, maxLogoPx: 110 },
+    placeholder: true,
+    printArea: { x: 0, y: -0.02, w: 0.22, h: 0.07, maxLogoPx: 110 },
   },
   {
     slug: "rollup",
     name: "Roll-up Banner",
     blurb: "85×200cm retractable banner with aluminum base.",
     moq: 1,
-    file: "rollup.png",
+    image: rollupImg,
     aspect: "tall",
     supportsColor: false,
-    printArea: { x: 0, y: -0.22, w: 0.55, h: 0.3, maxLogoPx: 280 },
+    placeholder: true,
+    printArea: { x: 0, y: -0.1, w: 0.45, h: 0.4, maxLogoPx: 240 },
   },
   {
     slug: "xbanner",
     name: "X-Banner",
     blurb: "60×160cm portable X-stand banner — event ready.",
     moq: 1,
-    file: "xbanner.png",
+    image: xbannerImg,
     aspect: "tall",
     supportsColor: false,
-    printArea: { x: 0, y: -0.22, w: 0.55, h: 0.3, maxLogoPx: 280 },
+    placeholder: true,
+    printArea: { x: 0, y: -0.05, w: 0.5, h: 0.45, maxLogoPx: 240 },
   },
 ];
 
 export function getProduct(slug: ProductSlug): Product {
   return PRODUCTS.find((p) => p.slug === slug) ?? PRODUCTS[0];
-}
-
-/** Public URL for a product image in the external `products` bucket. */
-export function productImageUrl(file: string): string {
-  return `${EXTERNAL_PRODUCTS_URL}/${file}`;
 }

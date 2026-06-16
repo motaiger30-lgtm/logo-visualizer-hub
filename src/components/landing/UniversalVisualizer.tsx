@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
-import { PRODUCTS, Product, ProductSlug, getProduct, productImageUrl } from "@/lib/catalog";
+import { PRODUCTS, Product, ProductSlug, getProduct } from "@/lib/catalog";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
@@ -362,7 +362,7 @@ function Preview({
         />
         <div className="absolute inset-8 flex items-center justify-center">
           <ProductImage
-            src={productImageUrl(product.file)}
+            src={product.image}
             label={product.name}
             ratio={product.aspect}
             className="w-full max-w-md"
