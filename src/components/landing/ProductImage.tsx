@@ -9,7 +9,7 @@ type Props = {
 };
 
 /**
- * Renders a real product image if it exists,
+ * Renders a real product image from Supabase Storage if it exists,
  * otherwise renders a branded placeholder card. NEVER falls back to AI/stock.
  */
 export function ProductImage({ src, label, className, ratio = "square" }: Props) {
