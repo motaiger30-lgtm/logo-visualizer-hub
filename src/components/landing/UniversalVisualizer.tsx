@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
+import { Loader as Loader2, Image as ImageIcon, MessageCircle, RotateCcw, Wand as Wand2, Sparkles } from "lucide-react";
 import { PRODUCTS, ProductSlug, PrintArea, getProduct } from "@/lib/catalog";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
 import urgentLogo3 from "@/assets/urgent-logo-3.png";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { supabase } from "@/integrations/supabase/client";
 import { ProductImage } from "./ProductImage";
 import { cn } from "@/lib/utils";
 
@@ -130,12 +129,6 @@ export function UniversalVisualizer() {
       unitPriceEgp: tier.unit,
       totalEgp: total,
     });
-    supabase.from("leads").insert({
-      category: product.name,
-      quantity: qty,
-      total_egp: total,
-      source: "whatsapp",
-    }).then(() => {});
     window.open(url, "_blank");
   };
 
