@@ -109,9 +109,6 @@ export function UniversalVisualizer() {
     window.open(url, "_blank");
   };
 
-  const _unused = () => {
-    window.open(url, "_blank");
-  };
 
   return (
     <section id="designer" className="relative py-24 sm:py-32 border-t border-border">
