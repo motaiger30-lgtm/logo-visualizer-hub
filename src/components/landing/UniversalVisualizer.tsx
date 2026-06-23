@@ -13,7 +13,6 @@ const URGENT_PRESETS = [
   { name: "White", src: urgentLogo3, bg: "bg-[#0D1146]" },
 ];
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { supabase } from "@/integrations/supabase/client";
 import { ProductImage } from "./ProductImage";
 import { cn } from "@/lib/utils";
 
@@ -107,14 +106,9 @@ export function UniversalVisualizer() {
       unitPriceEgp: tier.unit,
       totalEgp: total,
     });
-    supabase.from("leads").insert({
-      category: category.name,
-      quantity: qty,
-      total_egp: total,
-      source: "whatsapp",
-    }).then(() => {});
     window.open(url, "_blank");
   };
+
 
   return (
     <section id="designer" className="relative py-24 sm:py-32 border-t border-border">
