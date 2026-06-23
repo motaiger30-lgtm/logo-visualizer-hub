@@ -1,7 +1,11 @@
-// Static placeholder catalog — no real product photos until user uploads to Supabase Storage.
-// Once products/<category>/<slug>/main.png exists in the products bucket, the UI auto-resolves it.
+// Static product catalog with local images bundled with the app.
+// No backend / no Supabase calls.
 
-import { supabase } from "@/integrations/supabase/client";
+import pensImg from "@/assets/product-pens.jpg";
+import mugsImg from "@/assets/product-mugs.jpg";
+import usbImg from "@/assets/product-usb.jpg";
+import notebooksImg from "@/assets/product-notebooks.jpg";
+import tshirtsImg from "@/assets/product-tshirts.jpg";
 
 export type Product = {
   slug: string;
@@ -15,6 +19,7 @@ export type Category = {
   slug: CategorySlug;
   name: string;
   blurb: string;
+  image: string;
   products: Product[];
 };
 
@@ -23,6 +28,7 @@ export const CATEGORIES: Category[] = [
     slug: "pens",
     name: "Promotional Pens",
     blurb: "7 premium variants — executive, medical, novelty.",
+    image: pensImg,
     products: [
       { slug: "countertop-secure-desk", name: "Countertop Secure Desk Pen", moq: 50 },
       { slug: "executive-matte-stylus", name: "Executive Matte Stylus", moq: 100 },
@@ -37,6 +43,7 @@ export const CATEGORIES: Category[] = [
     slug: "mugs",
     name: "Mugs",
     blurb: "Ceramic, magic and travel mugs.",
+    image: mugsImg,
     products: [
       { slug: "ceramic", name: "Ceramic Mug", moq: 50 },
       { slug: "magic", name: "Magic Mug", moq: 50 },
@@ -47,6 +54,7 @@ export const CATEGORIES: Category[] = [
     slug: "usb",
     name: "USB Flash",
     blurb: "Metal, card and wood USB drives.",
+    image: usbImg,
     products: [
       { slug: "metal", name: "Metal USB", moq: 50 },
       { slug: "card", name: "Card USB", moq: 100 },
@@ -57,6 +65,7 @@ export const CATEGORIES: Category[] = [
     slug: "notebooks",
     name: "Notebooks",
     blurb: "PU, spiral and executive notebooks.",
+    image: notebooksImg,
     products: [
       { slug: "pu", name: "PU Notebook", moq: 50 },
       { slug: "spiral", name: "Spiral Notebook", moq: 50 },
@@ -67,6 +76,7 @@ export const CATEGORIES: Category[] = [
     slug: "tshirts",
     name: "T-Shirts",
     blurb: "Cotton, polo and premium tees.",
+    image: tshirtsImg,
     products: [
       { slug: "cotton", name: "Cotton", moq: 30 },
       { slug: "polo", name: "Polo", moq: 30 },
@@ -83,16 +93,7 @@ export function getCategory(slug: CategorySlug): Category {
 export const PENS = CATEGORIES[0].products;
 export type Pen = Product;
 
-/** Resolve a Supabase Storage URL for a product image. */
-export function productImageUrl(folder: string, slug: string, file = "main.png") {
-  return supabase.storage.from("products").getPublicUrl(`${folder}/${slug}/${file}`).data.publicUrl;
-}
-
-export async function imageExists(url: string): Promise<boolean> {
-  try {
-    const r = await fetch(url, { method: "HEAD" });
-    return r.ok;
-  } catch {
-    return false;
-  }
+/** Resolve a local product image. Always returns the category's bundled image. */
+export function productImageUrl(category: CategorySlug, _slug?: string): string {
+  return getCategory(category).image;
 }

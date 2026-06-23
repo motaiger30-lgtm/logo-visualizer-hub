@@ -13,7 +13,6 @@ const URGENT_PRESETS = [
   { name: "White", src: urgentLogo3, bg: "bg-[#0D1146]" },
 ];
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { supabase } from "@/integrations/supabase/client";
 import { ProductImage } from "./ProductImage";
 import { cn } from "@/lib/utils";
 
