@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Upload, Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
-import { CATEGORIES, CategorySlug, getCategory, productImageUrl } from "@/lib/catalog";
+import { CATEGORIES, CategorySlug, getCategory } from "@/lib/catalog";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
@@ -128,7 +128,7 @@ export function UniversalVisualizer() {
           {/* Preview */}
           <Preview
             category={categorySlug}
-            productSlug={product.slug}
+            productImage={product.image}
             productLabel={product.name}
             colorHex={color.hex}
             logoSrc={logoSrc}
@@ -304,11 +304,11 @@ export function UniversalVisualizer() {
 }
 
 function Preview({
-  category, productSlug, productLabel, colorHex,
+  category, productImage, productLabel, colorHex,
   logoSrc, logoScale, logoX, logoY, setLogoX, setLogoY,
 }: {
   category: CategorySlug;
-  productSlug: string;
+  productImage: string;
   productLabel: string;
   colorHex: string;
   logoSrc: string | null;
@@ -367,7 +367,7 @@ function Preview({
         />
         <div className="absolute inset-8 flex items-center justify-center">
           <ProductImage
-            src={productImageUrl(category, productSlug)}
+            src={productImage}
             label={productLabel}
             ratio={ratio}
             className="w-full max-w-md"
