@@ -106,12 +106,10 @@ export function UniversalVisualizer() {
       unitPriceEgp: tier.unit,
       totalEgp: total,
     });
-    supabase.from("leads").insert({
-      category: category.name,
-      quantity: qty,
-      total_egp: total,
-      source: "whatsapp",
-    }).then(() => {});
+    window.open(url, "_blank");
+  };
+
+  const _unused = () => {
     window.open(url, "_blank");
   };
 
