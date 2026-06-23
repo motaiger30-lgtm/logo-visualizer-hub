@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Upload, Loader2, ImageIcon, MessageCircle, RotateCcw, Wand2, Sparkles } from "lucide-react";
+import { Upload, Loader as Loader2, Image as ImageIcon, MessageCircle, RotateCcw, Wand as Wand2, Sparkles } from "lucide-react";
 import { CATEGORIES, CategorySlug, getCategory } from "@/lib/catalog";
+import { getPreset } from "@/lib/visualizerPresets";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
@@ -47,12 +48,18 @@ export function UniversalVisualizer() {
   const [logoScale, setLogoScale] = useState(1);
   const [logoX, setLogoX] = useState(0);
   const [logoY, setLogoY] = useState(0);
+  const [logoRotation, setLogoRotation] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Reset product when category changes & listen for external category events
+  // Apply per-category default logo placement when the category changes.
+  // Drag/resize remain fully functional — these are only starting defaults.
   useEffect(() => {
-    setProductSlug(category.products[0].slug);
-    setQty((q) => Math.max(q, category.products[0].moq));
+    const p = getPreset(categorySlug);
+    setLogoX((p.x - 50) / 100);
+    setLogoY((p.y - 50) / 100);
+    setLogoScale(Math.max(p.width, p.height) / 100);
+    setLogoRotation(p.rotation);
   }, [categorySlug]);
 
   useEffect(() => {
@@ -133,6 +140,7 @@ export function UniversalVisualizer() {
             colorHex={color.hex}
             logoSrc={logoSrc}
             logoScale={logoScale}
+            logoRotation={logoRotation}
             logoX={logoX} logoY={logoY}
             setLogoX={setLogoX} setLogoY={setLogoY}
           />
@@ -305,7 +313,7 @@ export function UniversalVisualizer() {
 
 function Preview({
   category, productImage, productLabel, colorHex,
-  logoSrc, logoScale, logoX, logoY, setLogoX, setLogoY,
+  logoSrc, logoScale, logoRotation, logoX, logoY, setLogoX, setLogoY,
 }: {
   category: CategorySlug;
   productImage: string;
@@ -313,6 +321,7 @@ function Preview({
   colorHex: string;
   logoSrc: string | null;
   logoScale: number;
+  logoRotation: number;
   logoX: number; logoY: number;
   setLogoX: (v: number) => void; setLogoY: (v: number) => void;
 }) {
@@ -385,7 +394,7 @@ function Preview({
               dragging && "cursor-grabbing",
             )}
             style={{
-              transform: `translate(calc(-50% + ${logoX * 100}%), calc(-50% + ${logoY * 100}%)) scale(${logoScale})`,
+              transform: `translate(calc(-50% + ${logoX * 100}%), calc(-50% + ${logoY * 100}%)) scale(${logoScale}) rotate(${logoRotation}deg)`,
             }}
           >
             <img
