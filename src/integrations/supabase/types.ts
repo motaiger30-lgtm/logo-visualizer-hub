@@ -76,48 +76,6 @@ export type Database = {
           },
         ]
       }
-      leads: {
-        Row: {
-          category: string | null
-          color_id: string | null
-          created_at: string
-          design_url: string | null
-          id: string
-          name: string | null
-          phone: string | null
-          product_id: string | null
-          quantity: number | null
-          source: string | null
-          total_egp: number | null
-        }
-        Insert: {
-          category?: string | null
-          color_id?: string | null
-          created_at?: string
-          design_url?: string | null
-          id?: string
-          name?: string | null
-          phone?: string | null
-          product_id?: string | null
-          quantity?: number | null
-          source?: string | null
-          total_egp?: number | null
-        }
-        Update: {
-          category?: string | null
-          color_id?: string | null
-          created_at?: string
-          design_url?: string | null
-          id?: string
-          name?: string | null
-          phone?: string | null
-          product_id?: string | null
-          quantity?: number | null
-          source?: string | null
-          total_egp?: number | null
-        }
-        Relationships: []
-      }
       preset_designs: {
         Row: {
           category: string | null
