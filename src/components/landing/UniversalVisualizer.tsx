@@ -4,7 +4,6 @@ import { Upload, Loader as Loader2, Image as ImageIcon, MessageCircle, RotateCcw
 import { CATEGORIES, CategorySlug, getCategory } from "@/lib/catalog";
 import { getPreset } from "@/lib/visualizerPresets";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
-import { TintablePen } from "./TintablePen";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
 import urgentLogo3 from "@/assets/urgent-logo-3.png";
@@ -17,15 +16,6 @@ const URGENT_PRESETS = [
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { ProductImage } from "./ProductImage";
 import { cn } from "@/lib/utils";
-
-const COLORS = [
-  { name: "Midnight", hex: "#0D1146" },
-  { name: "Purple", hex: "#7300E6" },
-  { name: "Silver", hex: "#c0c0c0" },
-  { name: "White", hex: "#ffffff" },
-  { name: "Black", hex: "#0a0a0a" },
-  { name: "Lime", hex: "#A1C900" },
-];
 
 const TIERS = [
   { min: 50, max: 99, unit: 22 },
@@ -40,7 +30,6 @@ export function UniversalVisualizer() {
   const category = getCategory(categorySlug);
   const [productSlug, setProductSlug] = useState(category.products[0].slug);
   const product = category.products.find((p) => p.slug === productSlug) ?? category.products[0];
-  const [color, setColor] = useState(COLORS[1]);
   const [qty, setQty] = useState(Math.max(100, product.moq));
 
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
@@ -109,7 +98,6 @@ export function UniversalVisualizer() {
     const url = buildWhatsAppUrl({
       category: category.name,
       product: product.name,
-      color: color.name,
       quantity: qty,
       unitPriceEgp: tier.unit,
       totalEgp: total,
@@ -128,7 +116,7 @@ export function UniversalVisualizer() {
             Pick. Customize. Quote.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            One designer for every product. Choose a category, pick a style, upload your logo and get a live EGP price.
+            One designer for every product. Pick a style, upload your logo and get a live EGP price.
           </p>
         </div>
 
@@ -138,7 +126,6 @@ export function UniversalVisualizer() {
             category={categorySlug}
             productImage={product.image}
             productLabel={product.name}
-            colorHex={color.hex}
             logoSrc={logoSrc}
             logoScale={logoScale}
             logoRotation={logoRotation}
@@ -168,27 +155,7 @@ export function UniversalVisualizer() {
               </div>
             </Step>
 
-            <Step n={3} label="Color">
-              <div className="flex flex-wrap gap-1.5">
-                {COLORS.map((c) => (
-                  <button
-                    key={c.hex}
-                    onClick={() => setColor(c)}
-                    className={cn(
-                      "flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-                      color.hex === c.hex
-                        ? "border-accent bg-white/5 text-foreground"
-                        : "border-white/10 text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <span className="h-4 w-4 rounded-full border border-white/20" style={{ background: c.hex }} />
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </Step>
-
-            <Step n={4} label={`Quantity (MOQ ${product.moq})`}>
+            <Step n={3} label={`Quantity (MOQ ${product.moq})`}>
               <div className="flex items-center gap-3">
                 <input
                   type="range" min={product.moq} max={2000} step={10}
@@ -206,7 +173,7 @@ export function UniversalVisualizer() {
               </div>
             </Step>
 
-            <Step n={5} label="Logo">
+            <Step n={4} label="Logo">
               <label className="block cursor-pointer rounded-2xl border border-dashed border-white/15 px-4 py-5 text-center hover:border-primary hover:bg-primary/5 transition-all">
                 <input
                   ref={fileRef}
@@ -313,13 +280,12 @@ export function UniversalVisualizer() {
 }
 
 function Preview({
-  category, productImage, productLabel, colorHex,
+  category, productImage, productLabel,
   logoSrc, logoScale, logoRotation, logoX, logoY, setLogoX, setLogoY,
 }: {
   category: CategorySlug;
   productImage: string;
   productLabel: string;
-  colorHex: string;
   logoSrc: string | null;
   logoScale: number;
   logoRotation: number;
@@ -334,7 +300,7 @@ function Preview({
   const rotY = useTransform(sx, [-1, 1], [-10, 10]);
   const rotX = useTransform(sy, [-1, 1], [6, -6]);
   const glossX = useTransform(sx, [-1, 1], ["20%", "80%"]);
-  const gloss = useTransform(glossX, (v) => `linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) ${v}, transparent 70%)`);
+  const gloss = useTransform(glossX, (v) => `linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.12) ${v}, transparent 70%)`);
 
   const onMove = (e: React.MouseEvent) => {
     const r = ref.current!.getBoundingClientRect();
@@ -361,7 +327,6 @@ function Preview({
   const onLogoUp = () => setDragging(false);
 
   const ratio = category === "pens" || category === "usb" ? "tall" : "wide" as const;
-  const isPen = category === "pens";
 
   return (
     <div className="relative">
@@ -372,22 +337,32 @@ function Preview({
         style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
         className="relative aspect-[4/5] sm:aspect-[5/4] rounded-3xl overflow-hidden border border-white/10 shadow-card"
       >
-        {/* Studio backdrop — neutral, Apple-like */}
+        {/* Blue studio backdrop — cinematic premium */}
         <div
           aria-hidden
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(120% 90% at 50% 30%, #f5f5f7 0%, #e6e7ec 45%, #b9bcc4 100%)",
+              "radial-gradient(120% 100% at 50% 35%, #2563eb 0%, #1e40af 28%, #0f1b4d 62%, #050a1f 100%)",
           }}
         />
-        {/* Subtle floor gradient */}
+        {/* Soft vignette to focus attention */}
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 h-1/3"
+          className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, transparent, rgba(60,63,72,0.25))",
+              "radial-gradient(ellipse at 50% 45%, transparent 30%, rgba(5,10,31,0.55) 80%, rgba(5,10,31,0.9) 100%)",
+          }}
+        />
+        {/* Central glow behind the product */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 z-0 w-[55%] h-[50%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(59,130,246,0.32) 0%, rgba(37,99,235,0.12) 45%, transparent 72%)",
+            filter: "blur(44px)",
           }}
         />
         {/* Soft contact shadow under product */}
@@ -396,28 +371,18 @@ function Preview({
           className="absolute left-1/2 bottom-[14%] z-[5] h-6 w-2/3 -translate-x-1/2 rounded-[50%]"
           style={{
             background:
-              "radial-gradient(ellipse at center, rgba(0,0,0,0.45), rgba(0,0,0,0.15) 45%, transparent 70%)",
-            filter: "blur(6px)",
+              "radial-gradient(ellipse at center, rgba(0,0,0,0.55), rgba(0,0,0,0.2) 45%, transparent 72%)",
+            filter: "blur(8px)",
           }}
         />
 
         <div className="absolute inset-8 flex items-center justify-center">
-          {isPen ? (
-            <TintablePen
-              src={productImage}
-              label={productLabel}
-              tint={colorHex}
-              material="plastic"
-              className="max-w-md"
-            />
-          ) : (
-            <ProductImage
-              src={productImage}
-              label={productLabel}
-              ratio={ratio}
-              className="w-full max-w-md"
-            />
-          )}
+          <ProductImage
+            src={productImage}
+            label={productLabel}
+            ratio={ratio}
+            className="w-full max-w-md drop-shadow-[0_25px_35px_rgba(0,0,0,0.45)]"
+          />
         </div>
 
         {logoSrc && (
