@@ -7,6 +7,26 @@ import notebooksImg from "@/assets/product-notebooks.jpg";
 import xBannerImg from "@/assets/product-x-banner.jpg";
 import rollupBannerImg from "@/assets/product-rollup-banner.jpg";
 
+// Per-pen product images (CDN-hosted via lovable-assets).
+import penCountertop from "@/assets/images/pens/countertop-secure-desk.png.asset.json";
+import penExecutive from "@/assets/images/pens/executive-matte-stylus.png.asset.json";
+import penSyringe from "@/assets/images/pens/medical-syringe.png.asset.json";
+import penBone from "@/assets/images/pens/bone.png.asset.json";
+import penMinimalist from "@/assets/images/pens/minimalist.png.asset.json";
+import penTechStylus from "@/assets/images/pens/tech-stylus.png.asset.json";
+import penEliteGift from "@/assets/images/pens/elite-gift.jpg.asset.json";
+
+// Pen slug → dedicated image URL. Add new pens here.
+export const PEN_IMAGES: Record<string, string> = {
+  "countertop-secure-desk": penCountertop.url,
+  "executive-matte-stylus": penExecutive.url,
+  "medical-syringe": penSyringe.url,
+  "bone": penBone.url,
+  "minimalist": penMinimalist.url,
+  "tech-stylus": penTechStylus.url,
+  "elite-gift": penEliteGift.url,
+};
+
 export type Product = {
   slug: string;
   name: string;
