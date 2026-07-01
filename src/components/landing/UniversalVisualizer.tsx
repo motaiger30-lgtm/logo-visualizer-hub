@@ -4,6 +4,7 @@ import { Upload, Loader as Loader2, Image as ImageIcon, MessageCircle, RotateCcw
 import { CATEGORIES, CategorySlug, getCategory } from "@/lib/catalog";
 import { getPreset } from "@/lib/visualizerPresets";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
+import { TintablePen } from "./TintablePen";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
 import urgentLogo3 from "@/assets/urgent-logo-3.png";
@@ -360,6 +361,7 @@ function Preview({
   const onLogoUp = () => setDragging(false);
 
   const ratio = category === "pens" || category === "usb" ? "tall" : "wide" as const;
+  const isPen = category === "pens";
 
   return (
     <div className="relative">
@@ -368,19 +370,54 @@ function Preview({
         onMouseMove={onMove}
         onMouseLeave={onLeave}
         style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
-        className="relative aspect-[4/5] sm:aspect-[5/4] rounded-3xl glass-strong overflow-hidden"
+        className="relative aspect-[4/5] sm:aspect-[5/4] rounded-3xl overflow-hidden border border-white/10 shadow-card"
       >
+        {/* Studio backdrop — neutral, Apple-like */}
         <div
-          className="absolute inset-0 opacity-25 transition-colors duration-500"
-          style={{ background: `radial-gradient(circle at 50% 40%, ${colorHex}, transparent 60%)` }}
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(120% 90% at 50% 30%, #f5f5f7 0%, #e6e7ec 45%, #b9bcc4 100%)",
+          }}
         />
+        {/* Subtle floor gradient */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-1/3"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent, rgba(60,63,72,0.25))",
+          }}
+        />
+        {/* Soft contact shadow under product */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 bottom-[14%] z-[5] h-6 w-2/3 -translate-x-1/2 rounded-[50%]"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(0,0,0,0.45), rgba(0,0,0,0.15) 45%, transparent 70%)",
+            filter: "blur(6px)",
+          }}
+        />
+
         <div className="absolute inset-8 flex items-center justify-center">
-          <ProductImage
-            src={productImage}
-            label={productLabel}
-            ratio={ratio}
-            className="w-full max-w-md"
-          />
+          {isPen ? (
+            <TintablePen
+              src={productImage}
+              label={productLabel}
+              tint={colorHex}
+              material="plastic"
+              className="max-w-md"
+            />
+          ) : (
+            <ProductImage
+              src={productImage}
+              label={productLabel}
+              ratio={ratio}
+              className="w-full max-w-md"
+            />
+          )}
         </div>
 
         {logoSrc && (
