@@ -4,6 +4,7 @@ import { Upload, Loader as Loader2, Image as ImageIcon, MessageCircle, RotateCcw
 import { CATEGORIES, CategorySlug, getCategory } from "@/lib/catalog";
 import { getPreset } from "@/lib/visualizerPresets";
 import { extractLogo, fileToDataURL } from "@/lib/logo-extract";
+import { TintablePen } from "./TintablePen";
 import urgentLogo1 from "@/assets/urgent-logo-1.png";
 import urgentLogo2 from "@/assets/urgent-logo-2.png";
 import urgentLogo3 from "@/assets/urgent-logo-3.png";
