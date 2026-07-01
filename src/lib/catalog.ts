@@ -7,6 +7,26 @@ import notebooksImg from "@/assets/product-notebooks.jpg";
 import xBannerImg from "@/assets/product-x-banner.jpg";
 import rollupBannerImg from "@/assets/product-rollup-banner.jpg";
 
+// Per-pen product images (CDN-hosted via lovable-assets).
+import penCountertop from "@/assets/images/pens/countertop-secure-desk.png.asset.json";
+import penExecutive from "@/assets/images/pens/executive-matte-stylus.png.asset.json";
+import penSyringe from "@/assets/images/pens/medical-syringe.png.asset.json";
+import penBone from "@/assets/images/pens/bone.png.asset.json";
+import penMinimalist from "@/assets/images/pens/minimalist.png.asset.json";
+import penTechStylus from "@/assets/images/pens/tech-stylus.png.asset.json";
+import penEliteGift from "@/assets/images/pens/elite-gift.jpg.asset.json";
+
+// Pen slug → dedicated image URL. Add new pens here.
+export const PEN_IMAGES: Record<string, string> = {
+  "countertop-secure-desk": penCountertop.url,
+  "executive-matte-stylus": penExecutive.url,
+  "medical-syringe": penSyringe.url,
+  "bone": penBone.url,
+  "minimalist": penMinimalist.url,
+  "tech-stylus": penTechStylus.url,
+  "elite-gift": penEliteGift.url,
+};
+
 export type Product = {
   slug: string;
   name: string;
@@ -31,13 +51,13 @@ export const CATEGORIES: Category[] = [
     blurb: "7 premium variants — executive, medical, novelty.",
     image: pensImg,
     products: [
-      { slug: "countertop-secure-desk", name: "Countertop Secure Desk Pen", moq: 50, image: pensImg },
-      { slug: "executive-matte-stylus", name: "Executive Matte Stylus", moq: 100, image: pensImg },
-      { slug: "medical-syringe", name: "Medical Syringe", moq: 200, image: pensImg },
-      { slug: "bone", name: "Bone Pen", moq: 100, image: pensImg },
-      { slug: "minimalist", name: "Minimalist", moq: 100, image: pensImg },
-      { slug: "tech-stylus", name: "Tech Stylus", moq: 100, image: pensImg },
-      { slug: "elite-gift", name: "Elite Gift", moq: 50, image: pensImg },
+      { slug: "countertop-secure-desk", name: "Countertop Secure Desk Pen", moq: 50, image: PEN_IMAGES["countertop-secure-desk"] },
+      { slug: "executive-matte-stylus", name: "Executive Matte Stylus", moq: 100, image: PEN_IMAGES["executive-matte-stylus"] },
+      { slug: "medical-syringe", name: "Medical Syringe", moq: 200, image: PEN_IMAGES["medical-syringe"] },
+      { slug: "bone", name: "Bone Pen", moq: 100, image: PEN_IMAGES["bone"] },
+      { slug: "minimalist", name: "Minimalist", moq: 100, image: PEN_IMAGES["minimalist"] },
+      { slug: "tech-stylus", name: "Tech Stylus", moq: 100, image: PEN_IMAGES["tech-stylus"] },
+      { slug: "elite-gift", name: "Elite Gift", moq: 50, image: PEN_IMAGES["elite-gift"] },
     ],
   },
   {
